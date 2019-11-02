@@ -1,0 +1,64 @@
+/*
+inetsw_array
+tcp
+.prot =       &tcp_prot,
+.ops =        &inet_stream_ops,
+*/
+
+int __sys_socket(int family, int type, int protocol)
+sock_create(family, type, protocol, &sock);
+        int sock_create(int family, int type, int protocol, struct socket **res)
+	pf = rcu_dereference(net_families[family]);
+	err = pf->create(net, sock, protocol, kern);
+                static int inet_create(struct net *net, struct socket *sock, int protocol, int kern)
+                list_for_each_entry_rcu(answer, &inetsw[sock->type], list)
+                answer_prot = answer->prot;
+                sk = sk_alloc(net, PF_INET, GFP_KERNEL, answer_prot, kern);
+                sock_init_data(sock, sk);
+                sk->sk_prot->init(sk);
+                        static int tcp_v4_init_sock(struct sock *sk)
+                        void tcp_init_sock(struct sock *sk)
+
+
+int __sys_listen(int fd, int backlog)
+sock = sockfd_lookup_light(fd, &err, &fput_needed);
+err = sock->ops->listen(sock, backlog);
+int inet_listen(struct socket *sock, int backlog)
+        err = inet_csk_listen_start(sk, backlog);
+        inet_sk_state_store(sk, TCP_LISTEN);
+        sk->sk_prot->get_port(sk, inet->inet_num)
+                int inet_csk_get_port(struct sock *sk, unsigned short snum)
+
+
+int __sys_bind(int fd, struct sockaddr __user *umyaddr, int addrlen)
+err = sock->ops->bind(sock, (struct sockaddr *) &address, addrlen);
+        int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
+	__inet_bind(sk, uaddr, addr_len, false, true);
+                int __inet_bind(struct sock *sk, struct sockaddr *uaddr, int addr_len,
+		sk->sk_prot->get_port(sk, snum)
+
+
+int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
+sock = sockfd_lookup_light(fd, &err, &fput_needed);
+err = sock->ops->accept(sock, newsock, sock->file->f_flags, false);
+        int inet_accept(struct socket *sock, struct socket *newsock, int flags,
+	struct sock *sk2 = sk1->sk_prot->accept(sk1, flags, &err, kern);
+                struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
+		error = inet_csk_wait_for_connect(sk, timeo);
+
+
+int __sys_sendto(int fd, void __user *buff, size_t len, unsigned int flags,
+err = sock_sendmsg(sock, &msg);
+        int sock_sendmsg(struct socket *sock, struct msghdr *msg)
+	sock->ops->sendmsg(sock, msg, msg_data_left(msg));
+                int inet_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)
+                sk->sk_prot->sendmsg(sk, msg, size);
+                        int tcp_sendmsg(struct sock *sk, struct msghdr *msg, size_t size)
+                        ret = tcp_sendmsg_locked(sk, msg, size);
+
+long __sys_recvmsg(int fd, struct user_msghdr __user *msg, unsigned int flags,
+err = ___sys_recvmsg(sock, msg, &msg_sys, flags, 0);
+err = (nosec ? sock_recvmsg_nosec : sock_recvmsg)(sock, msg_sys, flags);
+        int inet_recvmsg(struct socket *sock, struct msghdr *msg, size_t size,
+		 int flags)
+        int tcp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int nonblock,
