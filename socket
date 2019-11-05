@@ -1,9 +1,37 @@
 /*
-inetsw_array
-tcp
-.prot =       &tcp_prot,
-.ops =        &inet_stream_ops,
+tcp option
+#define OPTION_SACK_ADVERTISE	(1 << 0)
+#define OPTION_TS		(1 << 1)
+#define OPTION_MD5		(1 << 2)
+#define OPTION_WSCALE		(1 << 3)
+#define OPTION_FAST_OPEN_COOKIE	(1 << 8)
+#define OPTION_SMC		(1 << 9)
 */
+/*
+inetsw_array
+
+tcp
+sock->sk->sk_prot = tcp_prot,
+sock->ops = inet_stream_ops,
+inet_csk(sock->sk)->icsk_af_ops = ipv4_specific
+
+backlog_rcv        = tcp_v4_do_rcv
+
+static struct net_protocol tcp_protocol = {
+	.early_demux	=	tcp_v4_early_demux,
+	.early_demux_handler =  tcp_v4_early_demux,
+	.handler	=	tcp_v4_rcv,
+	.err_handler	=	tcp_v4_err,
+	.no_policy	=	1,
+	.netns_ok	=	1,
+	.icmp_strict_tag_validation = 1,
+};
+
+*/
+
+
+int tcp_v4_rcv(struct sk_buff *skb)
+
 
 int __sys_socket(int family, int type, int protocol)
 sock_create(family, type, protocol, &sock);
@@ -38,6 +66,19 @@ err = sock->ops->bind(sock, (struct sockaddr *) &address, addrlen);
 		sk->sk_prot->get_port(sk, snum)
 
 
+int __sys_connect(int fd, struct sockaddr __user *uservaddr, int addrlen)
+    int inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
+        int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
+            bool tcp_fastopen_defer_connect(struct sock *sk, int *err)
+            int tcp_connect(struct sock *sk)
+            err = tp->fastopen_req ? tcp_send_syn_data(sk, buff) : tcp_transmit_skb(sk, buff, 1, sk->sk_allocation);
+                int tcp_send_syn_data(struct sock *sk, struct sk_buff *syn)
+                int tcp_transmit_skb(struct sock *sk, struct sk_buff *skb, int clone_it,
+
+
+tcp_v4_do_rcv
+
+
 int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
 sock = sockfd_lookup_light(fd, &err, &fput_needed);
 err = sock->ops->accept(sock, newsock, sock->file->f_flags, false);
@@ -49,7 +90,7 @@ err = sock->ops->accept(sock, newsock, sock->file->f_flags, false);
 
 int __sys_sendto(int fd, void __user *buff, size_t len, unsigned int flags,
 err = sock_sendmsg(sock, &msg);
-        int sock_sendmsg(struct socket *sock, struct msghdr *msg)
+    int sock_sendmsg(struct socket *sock, struct msghdr *msg)
 	sock->ops->sendmsg(sock, msg, msg_data_left(msg));
                 int inet_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)
                 sk->sk_prot->sendmsg(sk, msg, size);
@@ -62,3 +103,7 @@ err = (nosec ? sock_recvmsg_nosec : sock_recvmsg)(sock, msg_sys, flags);
         int inet_recvmsg(struct socket *sock, struct msghdr *msg, size_t size,
 		 int flags)
         int tcp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int nonblock,
+
+/* tcp quick ack */
+void tcp_enter_quickack_mode(struct sock *sk, unsigned int max_quickacks);
+void tcp_dec_quickack_mode(struct sock *sk, const unsigned int pkts)
