@@ -15,7 +15,7 @@ sock->sk->sk_prot = tcp_prot,
 sock->ops = inet_stream_ops,
 inet_csk(sock->sk)->icsk_af_ops = ipv4_specific
 
-backlog_rcv        = tcp_v4_do_rcv
+backlog_rcv		= tcp_v4_do_rcv
 
 static struct net_protocol tcp_protocol = {
 	.early_demux	=	tcp_v4_early_demux,
@@ -35,74 +35,79 @@ int tcp_v4_rcv(struct sk_buff *skb)
 
 int __sys_socket(int family, int type, int protocol)
 sock_create(family, type, protocol, &sock);
-        int sock_create(int family, int type, int protocol, struct socket **res)
+		int sock_create(int family, int type, int protocol, struct socket **res)
 	pf = rcu_dereference(net_families[family]);
 	err = pf->create(net, sock, protocol, kern);
-                static int inet_create(struct net *net, struct socket *sock, int protocol, int kern)
-                list_for_each_entry_rcu(answer, &inetsw[sock->type], list)
-                answer_prot = answer->prot;
-                sk = sk_alloc(net, PF_INET, GFP_KERNEL, answer_prot, kern);
-                sock_init_data(sock, sk);
-                sk->sk_prot->init(sk);
-                        static int tcp_v4_init_sock(struct sock *sk)
-                        void tcp_init_sock(struct sock *sk)
+				static int inet_create(struct net *net, struct socket *sock, int protocol, int kern)
+				list_for_each_entry_rcu(answer, &inetsw[sock->type], list)
+				answer_prot = answer->prot;
+				sk = sk_alloc(net, PF_INET, GFP_KERNEL, answer_prot, kern);
+				sock_init_data(sock, sk);
+				sk->sk_prot->init(sk);
+						static int tcp_v4_init_sock(struct sock *sk)
+						void tcp_init_sock(struct sock *sk)
 
 
 int __sys_listen(int fd, int backlog)
 sock = sockfd_lookup_light(fd, &err, &fput_needed);
 err = sock->ops->listen(sock, backlog);
 int inet_listen(struct socket *sock, int backlog)
-        err = inet_csk_listen_start(sk, backlog);
-        inet_sk_state_store(sk, TCP_LISTEN);
-        sk->sk_prot->get_port(sk, inet->inet_num)
-                int inet_csk_get_port(struct sock *sk, unsigned short snum)
+		err = inet_csk_listen_start(sk, backlog);
+		inet_sk_state_store(sk, TCP_LISTEN);
+		sk->sk_prot->get_port(sk, inet->inet_num)
+				int inet_csk_get_port(struct sock *sk, unsigned short snum)
 
 
 int __sys_bind(int fd, struct sockaddr __user *umyaddr, int addrlen)
 err = sock->ops->bind(sock, (struct sockaddr *) &address, addrlen);
-        int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
+		int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 	__inet_bind(sk, uaddr, addr_len, false, true);
-                int __inet_bind(struct sock *sk, struct sockaddr *uaddr, int addr_len,
+				int __inet_bind(struct sock *sk, struct sockaddr *uaddr, int addr_len,
 		sk->sk_prot->get_port(sk, snum)
 
 
 int __sys_connect(int fd, struct sockaddr __user *uservaddr, int addrlen)
-    int inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
-        int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
-            bool tcp_fastopen_defer_connect(struct sock *sk, int *err)
-            int tcp_connect(struct sock *sk)
-            err = tp->fastopen_req ? tcp_send_syn_data(sk, buff) : tcp_transmit_skb(sk, buff, 1, sk->sk_allocation);
-                int tcp_send_syn_data(struct sock *sk, struct sk_buff *syn)
-                int tcp_transmit_skb(struct sock *sk, struct sk_buff *skb, int clone_it,
+	int inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
+		int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
+			bool tcp_fastopen_defer_connect(struct sock *sk, int *err)
+			int tcp_connect(struct sock *sk)
+			err = tp->fastopen_req ? tcp_send_syn_data(sk, buff) : tcp_transmit_skb(sk, buff, 1, sk->sk_allocation);
+				int tcp_send_syn_data(struct sock *sk, struct sk_buff *syn)
+				int tcp_transmit_skb(struct sock *sk, struct sk_buff *skb, int clone_it,
 
 
-tcp_v4_do_rcv
+int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
+    if (sk->sk_state == TCP_ESTABLISHED) { /* Fast path */
+        tcp_rcv_established(sk, skb);
+	if (sk->sk_state == TCP_LISTEN) {
+        struct sock *nsk = tcp_v4_cookie_check(sk, skb);
+        tcp_child_process(sk, nsk, skb)
 
 
 int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
 sock = sockfd_lookup_light(fd, &err, &fput_needed);
 err = sock->ops->accept(sock, newsock, sock->file->f_flags, false);
-        int inet_accept(struct socket *sock, struct socket *newsock, int flags,
+		int inet_accept(struct socket *sock, struct socket *newsock, int flags,
 	struct sock *sk2 = sk1->sk_prot->accept(sk1, flags, &err, kern);
-                struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
+				struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
 		error = inet_csk_wait_for_connect(sk, timeo);
 
 
 int __sys_sendto(int fd, void __user *buff, size_t len, unsigned int flags,
 err = sock_sendmsg(sock, &msg);
-    int sock_sendmsg(struct socket *sock, struct msghdr *msg)
+	int sock_sendmsg(struct socket *sock, struct msghdr *msg)
 	sock->ops->sendmsg(sock, msg, msg_data_left(msg));
-                int inet_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)
-                sk->sk_prot->sendmsg(sk, msg, size);
-                        int tcp_sendmsg(struct sock *sk, struct msghdr *msg, size_t size)
-                        ret = tcp_sendmsg_locked(sk, msg, size);
+				int inet_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)
+				sk->sk_prot->sendmsg(sk, msg, size);
+						int tcp_sendmsg(struct sock *sk, struct msghdr *msg, size_t size)
+						ret = tcp_sendmsg_locked(sk, msg, size);
 
 long __sys_recvmsg(int fd, struct user_msghdr __user *msg, unsigned int flags,
 err = ___sys_recvmsg(sock, msg, &msg_sys, flags, 0);
 err = (nosec ? sock_recvmsg_nosec : sock_recvmsg)(sock, msg_sys, flags);
-        int inet_recvmsg(struct socket *sock, struct msghdr *msg, size_t size,
+		int inet_recvmsg(struct socket *sock, struct msghdr *msg, size_t size,
 		 int flags)
-        int tcp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int nonblock,
+		int tcp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int nonblock,
 
 /* tcp quick ack */
 void tcp_enter_quickack_mode(struct sock *sk, unsigned int max_quickacks);
