@@ -87,6 +87,23 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
                         struct sock *tcp_v4_syn_recv_sock(const struct sock *sk, struct sk_buff *skb,
                     inet_csk_reqsk_queue_add(sk, req, child)
         tcp_child_process(sk, nsk, skb)
+            if (!sock_owned_by_user(child)) {
+                ret = tcp_rcv_state_process(child, skb);
+                if (state == TCP_SYN_RECV && child->sk_state != state)
+                    parent->sk_data_ready(parent);
+            } else {
+                __sk_add_backlog(child, skb);
+            }
+
+
+//RFC 793 main procedure
+int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb)
+case TCP_LISTEN:
+    acceptable = icsk->icsk_af_ops->conn_request(sk, skb) >= 0;
+case TCP_SYN_SENT:
+    queued = tcp_rcv_synsent_state_process(sk, skb, th);
+		tcp_ack(sk, skb, FLAG_SLOWPATH);
+		tcp_finish_connect(sk, skb);
 
 
 int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
