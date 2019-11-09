@@ -1,3 +1,17 @@
+tcp_rtx_queue: retransmit queue
+PAWS: https://tools.ietf.org/html/rfc7323 
+TCP Timestamps Option: https://tools.ietf.org/html/rfc7323
+TCP Window Scale: https://tools.ietf.org/html/rfc7323
+/*
+With the Nagle algorithm, a first
+   small packet will be transmitted, then subsequent writes from the
+   application will be buffered at the sending TCP until either i)
+   enough application data has accumulated to enable TCP to transmit a
+   maximum sized packet, or ii) the initial small packet is
+   acknowledged by the receiving TCP.
+*/
+nagle small-packet problem: https://tools.ietf.org/html/rfc896
+
 /*
 tcp option
 #define OPTION_SACK_ADVERTISE	(1 << 0)
