@@ -7,6 +7,15 @@ tcp option
 #define OPTION_FAST_OPEN_COOKIE	(1 << 8)
 #define OPTION_SMC		(1 << 9)
 */
+
+RFC
+tcp: https://tools.ietf.org/html/rfc793
+sack: https://tools.ietf.org/html/rfc2018
+fack: http://conferences.sigcomm.org/sigcomm/1996/papers/mathis.pdf
+dsack: https://tools.ietf.org/html/rfc2883
+rack: https://tools.ietf.org/html/draft-ietf-tcpm-rack-06
+Early Retransmit: https://tools.ietf.org/html/rfc5827
+
 /*
 inetsw_array
 
