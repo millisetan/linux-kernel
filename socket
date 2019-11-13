@@ -3,17 +3,42 @@ tcp: https://tools.ietf.org/html/rfc793
 sack: https://tools.ietf.org/html/rfc2018
 fack: http://conferences.sigcomm.org/sigcomm/1996/papers/mathis.pdf
 dsack: https://tools.ietf.org/html/rfc2883
-rack: https://tools.ietf.org/html/draft-ietf-tcpm-rack-06
-Early Retransmit: https://tools.ietf.org/html/rfc5827
 PAWS: https://tools.ietf.org/html/rfc7323 
 TCP Timestamps Option: https://tools.ietf.org/html/rfc7323
 TCP Window Scale: https://tools.ietf.org/html/rfc7323
+
 nagle small-packet problem: https://tools.ietf.org/html/rfc896
     With the Nagle algorithm, a first small packet will be transmitted, then subsequent writes from the application will be buffered at the sending TCP until either i) enough application data has accumulated to enable TCP to transmit a maximum sized packet, or ii) the initial small packet is acknowledged by the receiving TCP.
+
 minshall A Suggested Modification to Nagle's Algorithm: https://tools.ietf.org/html/draft-minshall-nagle-00
     If a TCP has less than a full-sized packet to transmit, and if any previous less than full-sized packet has not yet been acknowledged, do not transmit a packet.
+
 delayed Ack: https://tools.ietf.org/html/rfc1122
     the delay MUST be less than 0.5 seconds, and in a stream of full-sized segments there SHOULD be an ACK for at least every second segment.
+MSS The TCP Maximum Segment Size and Related Topics: https://tools.ietf.org/html/rfc879
+
+TCP Fast Open: https://tools.ietf.org/html/rfc7413
+    tcp_fastopen_defer_connect
+    MSG_FASTOPEN
+    
+SYN cookies: http://cr.yp.to/syncookies.html
+    SYN cookies are particular choices of initial TCP sequence numbers by TCP servers
+
+TLP An Algorithm for Fast Recovery of Tail Losses: https://tools.ietf.org/html/draft-dukkipati-tcpm-tcp-loss-probe-01
+   cause: drops at the tail end of transactions or a loss of an entire window of data/ACKs
+   intention: Tail Loss Probe (TLP), which sends probe segments to trigger duplicate ACKs with the intent of invoking fast recovery more quickly than an RTO at the end of a transaction
+   linux kernel patch: https://lwn.net/Articles/542642/
+
+Early Retransmit: https://tools.ietf.org/html/rfc5827
+    fast retransmit use 3 dupack to detect loss (3 is chosen to distinguish reorder from loss), when reciever can not generate 3 dupack(outstanding seg < 4 && no new data can be sent), we need to early retransmit
+    ER_thresh = 3   // 等于3，表示还是标准的FR算法
+    if (oseg < 4 && new data cannot be sent)    // 如果满足条件，考虑启用ER算法
+        if (SACK is unsupport)                  // 如果SACK选项不支持，则使用oseg-1作为阈值
+            ER_thresh = oseg - 1
+        elif (SACKed packet == oseg-1)          // 否则，只有当oseg-1个包被SACK，才能启用ER
+            ER_thresh = oseg - 1
+
+rack: https://tools.ietf.org/html/draft-ietf-tcpm-rack-06
     
 
 VARIABLE EXPLAIN
@@ -36,6 +61,7 @@ tcp
 sock->sk->sk_prot = tcp_prot,
 sock->ops = inet_stream_ops,
 inet_csk(sock->sk)->icsk_af_ops = ipv4_specific
+tcp_request_sock_ipv4_ops
 
 backlog_rcv		= tcp_v4_do_rcv
 
@@ -101,7 +127,8 @@ int __sys_connect(int fd, struct sockaddr __user *uservaddr, int addrlen)
 int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
     if (sk->sk_state == TCP_ESTABLISHED) { /* Fast path */
         tcp_rcv_established(sk, skb);
-	if (sk->sk_state == TCP_LISTEN) {
+	if (sk->sk_state == TCP_LISTEN)
+        //SYN cookies, 3WHS completed, check and delayed create
         struct sock *nsk = tcp_v4_cookie_check(sk, skb);
             cookie_v4_check(sk, skb);
                 tcp_get_cookie_sock(sk, skb, req, &rt->dst, tsoff);
@@ -116,16 +143,39 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
             } else {
                 __sk_add_backlog(child, skb);
             }
+	tcp_rcv_state_process(sk, skb)
 
 
 //RFC 793 main procedure
 int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb)
 case TCP_LISTEN:
     acceptable = icsk->icsk_af_ops->conn_request(sk, skb) >= 0;
+        int tcp_v4_conn_request(struct sock *sk, struct sk_buff *skb)
+        return tcp_conn_request(&tcp_request_sock_ops, &tcp_request_sock_ipv4_ops, sk, skb);
+            isn = cookie_init_sequence(af_ops, sk, skb, &req->mss);
+            tcp_try_fastopen(sk, skb, req, &foc, dst);
+                tcp_fastopen_queue_check(sk))
+                tcp_fastopen_cookie_gen(sk, req, skb, &valid_foc)
+                tcp_fastopen_create_child(sk, skb, req);
+                    inet_csk(sk)->icsk_af_ops->syn_recv_sock(sk, skb, req, NULL, NULL, &own_req);
+                    tcp_v4_syn_recv_sock(const struct sock *sk, struct sk_buff *skb,...)
+                        newsk = tcp_create_openreq_child(sk, req, skb);
+            af_ops->send_synack(sk, dst, &fl, req, &foc, ...)
+                static int tcp_v4_send_synack(const struct sock *sk, struct dst_entry *dst, ...)
 case TCP_SYN_SENT:
     queued = tcp_rcv_synsent_state_process(sk, skb, th);
 		tcp_ack(sk, skb, FLAG_SLOWPATH);
 		tcp_finish_connect(sk, skb);
+            tcp_set_state(sk, TCP_ESTABLISHED);
+            tcp_init_transfer(sk, BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB);
+    tcp_urg(sk, skb, th);
+        tcp_check_urg(sk, th);
+    tcp_data_snd_check(sk);
+        tcp_push_pending_frames(sk);
+        tcp_check_space(sk);
+
+
+void tcp_rcv_established(struct sock *sk, struct sk_buff *skb)
 
 
 int __sys_accept4(int fd, struct sockaddr __user *upeer_sockaddr,
