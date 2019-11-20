@@ -7,6 +7,9 @@ PAWS: https://tools.ietf.org/html/rfc7323
 TCP Timestamps Option: https://tools.ietf.org/html/rfc7323
 TCP Window Scale: https://tools.ietf.org/html/rfc7323
 
+NewReno: https://tools.ietf.org/html/rfc6582
+    In typical implementation, data sender only retransmits a packet after a retransmit timeout has occurred, or after three duplicate acknowledgments have arrived triggering the fast retransmit algorithm. In NewReno, While we are in Recovery and a partial ACK arrives, we assume that one more packet is lost.
+
 nagle small-packet problem: https://tools.ietf.org/html/rfc896
     With the Nagle algorithm, a first small packet will be transmitted, then subsequent writes from the application will be buffered at the sending TCP until either i) enough application data has accumulated to enable TCP to transmit a maximum sized packet, or ii) the initial small packet is acknowledged by the receiving TCP.
 
@@ -25,12 +28,13 @@ SYN cookies: http://cr.yp.to/syncookies.html
     SYN cookies are particular choices of initial TCP sequence numbers by TCP servers
 
 TLP An Algorithm for Fast Recovery of Tail Losses: https://tools.ietf.org/html/draft-dukkipati-tcpm-tcp-loss-probe-01
-   cause: drops at the tail end of transactions or a loss of an entire window of data/ACKs
-   intention: Tail Loss Probe (TLP), which sends probe segments to trigger duplicate ACKs with the intent of invoking fast recovery more quickly than an RTO at the end of a transaction
-   linux kernel patch: https://lwn.net/Articles/542642/
+    if we are at the tail of sent, we can't wait the long and conservative RTO to fire retransmit, it hurts performance(latency, bindwidth), instead we schedule a short and aggressive PTO timer to fire retransmit. PTO retransmit may prevent tcp detect lost because retransmit may mask the original packet's lost, we must take the PTO retransmit into account when detect some packet is lost.
+    cause: drops at the tail end of transactions or a loss of an entire window of data/ACKs
+    intention: Tail Loss Probe (TLP), which sends probe segments to trigger duplicate ACKs with the intent of invoking fast recovery more quickly than an RTO at the end of a transaction
+    linux kernel patch: https://lwn.net/Articles/542642/
 
 Early Retransmit: https://tools.ietf.org/html/rfc5827
-    fast retransmit use 3 dupack to detect loss (3 is chosen to distinguish reorder from loss), when reciever can not generate 3 dupack(outstanding seg < 4 && no new data can be sent), we need to early retransmit
+    fast retransmit use 3 dupack to detect loss (3 is chosen to distinguish reorder from loss), when reciever can not generate 3 dupack(outstanding seg < 4 && no new data can be sent), we need to early retransmit, if all packet except the one after SND_UNACK is sack, we deem that packet is lost.
     ER_thresh = 3   // 等于3，表示还是标准的FR算法
     if (oseg < 4 && new data cannot be sent)    // 如果满足条件，考虑启用ER算法
         if (SACK is unsupport)                  // 如果SACK选项不支持，则使用oseg-1作为阈值
@@ -39,7 +43,12 @@ Early Retransmit: https://tools.ietf.org/html/rfc5827
             ER_thresh = oseg - 1
 
 rack: https://tools.ietf.org/html/draft-ietf-tcpm-rack-06
+    RACK uses the most recently delivered packet’s transmission time to judge if some packets sent previous to that time have "expired" by passing a certain reordering settling window(if a packet arrives now, we calculate the reordering windows is 20ms, we deem all packet sent before that packet by 20ms earlier is lost).
     
+Forward RTO-Recovery (F-RTO): https://tools.ietf.org/html/rfc5682
+    The main motivation of the algorithm is to recover efficiently from a spurious RTO.
+
+Proportional Rate Reduction for TCP(PRR): https://tools.ietf.org/html/rfc6937
 
 VARIABLE EXPLAIN
 tcp_rtx_queue: retransmit queue
