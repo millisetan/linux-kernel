@@ -7,6 +7,8 @@ PAWS: https://tools.ietf.org/html/rfc7323
 TCP Timestamps Option: https://tools.ietf.org/html/rfc7323
 TCP Window Scale: https://tools.ietf.org/html/rfc7323
 
+Silly Window Syndrome: http://www.tcpipguide.com/free/t_TCPSillyWindowSyndromeandChangesTotheSlidingWindow.htm
+
 NewReno: https://tools.ietf.org/html/rfc6582
     In typical implementation, data sender only retransmits a packet after a retransmit timeout has occurred, or after three duplicate acknowledgments have arrived triggering the fast retransmit algorithm. In NewReno, While we are in Recovery and a partial ACK arrives, we assume that one more packet is lost.
 
@@ -48,10 +50,17 @@ rack: https://tools.ietf.org/html/draft-ietf-tcpm-rack-06
 Forward RTO-Recovery (F-RTO): https://tools.ietf.org/html/rfc5682
     The main motivation of the algorithm is to recover efficiently from a spurious RTO.
 
+A Conservative Loss Recovery Algorithm Based on Selective Acknowledgment (SACK) for TCP: https://tools.ietf.org/html/rfc6675
+    sequence number S is lost when DupThresh sack arrived after s or DupThresh * MSS byte sack after S
+
 Proportional Rate Reduction for TCP(PRR): https://tools.ietf.org/html/rfc6937
+    Van Jacobson's packet conservation principle: segments delivered to the receiver are used as the clock to trigger sending the same number of segments back into the network.
+    total sends eqaul to delivered when tcp_packets_in_flight < ssthresh, else total sends eqaul to  proportional(ssthresh/RecoverFS) of delivered
+    
 
 VARIABLE EXPLAIN
 tcp_rtx_queue: retransmit queue
+CWR: Congestion Window Reduced
 
 
 TCP OPTION
