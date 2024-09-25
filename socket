@@ -7,13 +7,18 @@ PAWS: https://tools.ietf.org/html/rfc7323
 TCP Timestamps Option: https://tools.ietf.org/html/rfc7323
 TCP Window Scale: https://tools.ietf.org/html/rfc7323
 
+TCP Tahoe = Slow Start + AIMD + Fast Retransmit
+TCP Reno = TCP Tahoe + Fast Recovery
+TCP New Reno = TCP Reno + 
+
 Silly Window Syndrome: http://www.tcpipguide.com/free/t_TCPSillyWindowSyndromeandChangesTotheSlidingWindow.htm
 
 NewReno: https://tools.ietf.org/html/rfc6582
     In typical implementation, data sender only retransmits a packet after a retransmit timeout has occurred, or after three duplicate acknowledgments have arrived triggering the fast retransmit algorithm. In NewReno, While we are in Recovery and a partial ACK arrives, we assume that one more packet is lost.
 
 nagle small-packet problem: https://tools.ietf.org/html/rfc896
-    With the Nagle algorithm, a first small packet will be transmitted, then subsequent writes from the application will be buffered at the sending TCP until either i) enough application data has accumulated to enable TCP to transmit a maximum sized packet, or ii) the initial small packet is acknowledged by the receiving TCP.
+    If a TCP has less than a full-sized packet to transmit, and if any previous packet has not yet been acknowledged, do not transmit a packet.
+    #With the Nagle algorithm, a first small packet will be transmitted, then subsequent writes from the application will be buffered at the sending TCP until either i) enough application data has accumulated to enable TCP to transmit a maximum sized packet, or ii) the initial small packet is acknowledged by the receiving TCP.
 
 minshall A Suggested Modification to Nagle's Algorithm: https://tools.ietf.org/html/draft-minshall-nagle-00
     If a TCP has less than a full-sized packet to transmit, and if any previous less than full-sized packet has not yet been acknowledged, do not transmit a packet.
@@ -23,6 +28,7 @@ delayed Ack: https://tools.ietf.org/html/rfc1122
 MSS The TCP Maximum Segment Size and Related Topics: https://tools.ietf.org/html/rfc879
 
 TCP Fast Open: https://tools.ietf.org/html/rfc7413
+    Carry date on syn and syn-ack
     tcp_fastopen_defer_connect
     MSG_FASTOPEN
     

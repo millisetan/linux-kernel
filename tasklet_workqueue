@@ -1,0 +1,12 @@
+https://developer.ibm.com/tutorials/l-tasklets/
+
+The problem with interrupt context is that some or all interrupts can be disabled during this time, which increases the latency of handling other hardware events (and introduces changes in processing behavior). Therefore, minimizing the work done in the interrupt is desirable, pushing some amount of the work into the kernel context (where there is a higher likelihood that the processor can be gainfully shared).
+
+Since kernel 2.3, softirqs(software interrupts) have been available that implement a set of 32 statically defined bottom halves.
+
+Also introduced in the 2.3, tasklets are built on top of softirqs to allow dynamic creation of deferrable functions.
+Today, only nine vectors are used for softirqs, one being the TASKLET_SOFTIRQ
+A given tasklet will run on only one CPU (the CPU on which the tasklet was scheduled), and the same tasklet will never run on more than one CPU of a given processor simultaneously. But different tasklets can run on different CPUs at the same time.(you don't need to care concurrency problem)
+
+in the 2.5 Linux kernel, work queues were introduced (see ./include/linux/workqueue.h). Work queues permit work to be deferred outside of the interrupt context into the kernel process context.
+work queues are a generic deferral mechanism in which the handler function for the work queue can sleep (not possible in the tasklet model).
